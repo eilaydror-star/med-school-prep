@@ -171,6 +171,13 @@ function renderContent(){
       return;
     }
     content.appendChild(renderCoursePage(course, currentView.tab || "overview"));
+  }else if(currentView.name === "topic"){
+    const course = getCourse(currentView.courseId);
+    if(!course || !course.topics[currentView.topicIdx]){
+      navigate({ name: "dashboard" });
+      return;
+    }
+    content.appendChild(renderTopicPage(course, currentView.topicIdx));
   }
 }
 
@@ -349,18 +356,75 @@ function renderTopicsTab(course){
     item.className = "topic-item" + (checked ? " checked" : "");
     item.innerHTML = `
       <span class="topic-checkbox">${checked ? "✓" : ""}</span>
-      <span class="topic-label">${topic}</span>
+      <span class="topic-label">${topic.title}</span>
+      <span class="topic-arrow">←</span>
     `;
     item.onclick = () => {
-      cs.topics[idx] = !cs.topics[idx];
-      saveState();
-      navigate(currentView);
+      navigate({ name: "topic", courseId: course.id, topicIdx: idx });
     };
     list.appendChild(item);
   });
 
   div.appendChild(list);
   return div;
+}
+
+function renderTopicPage(course, idx){
+  const topic = course.topics[idx];
+  const cs = getCourseState(course.id);
+  const wrap = document.createElement("div");
+  wrap.className = "topic-page";
+
+  const crumb = document.createElement("div");
+  crumb.className = "breadcrumb";
+  crumb.innerHTML = `<span>←</span><span>חזרה לנושאים - ${course.title}</span>`;
+  crumb.onclick = () => navigate({ name: "course", courseId: course.id, tab: "topics" });
+  wrap.appendChild(crumb);
+
+  const header = document.createElement("div");
+  header.className = "topic-page-header";
+  header.innerHTML = `
+    <div class="topic-page-counter">נושא ${idx + 1} מתוך ${course.topics.length}</div>
+    <h1 class="topic-page-title">${topic.title}</h1>
+  `;
+  wrap.appendChild(header);
+
+  const body = document.createElement("div");
+  body.className = "topic-content";
+  body.innerHTML = topic.content || "<p>תוכן לנושא זה יתווסף בקרוב.</p>";
+  wrap.appendChild(body);
+
+  const readRow = document.createElement("div");
+  readRow.className = "topic-read-row";
+  const readBtn = document.createElement("button");
+  const checked = !!cs.topics[idx];
+  readBtn.className = "btn-mark-read" + (checked ? " done" : "");
+  readBtn.textContent = checked ? "✓ סומן כנקרא" : "סמן כנקרא";
+  readBtn.onclick = () => {
+    cs.topics[idx] = !cs.topics[idx];
+    saveState();
+    navigate(currentView);
+  };
+  readRow.appendChild(readBtn);
+  wrap.appendChild(readRow);
+
+  const nav = document.createElement("div");
+  nav.className = "topic-nav-row";
+  const prevBtn = document.createElement("button");
+  prevBtn.className = "btn-topic-nav";
+  prevBtn.textContent = "→ נושא קודם";
+  prevBtn.disabled = idx === 0;
+  prevBtn.onclick = () => navigate({ name: "topic", courseId: course.id, topicIdx: idx - 1 });
+  const nextBtn = document.createElement("button");
+  nextBtn.className = "btn-topic-nav";
+  nextBtn.textContent = "נושא הבא ←";
+  nextBtn.disabled = idx === course.topics.length - 1;
+  nextBtn.onclick = () => navigate({ name: "topic", courseId: course.id, topicIdx: idx + 1 });
+  nav.appendChild(prevBtn);
+  nav.appendChild(nextBtn);
+  wrap.appendChild(nav);
+
+  return wrap;
 }
 
 function renderResourcesTab(course){
@@ -371,18 +435,115 @@ function renderResourcesTab(course){
   course.resources.forEach(res => {
     const item = document.createElement("div");
     item.className = "resource-item";
-    item.innerHTML = `
-      <span class="resource-icon">📎</span>
-      <div>
-        <div class="resource-name">${res.name}</div>
-        <div class="resource-note">${res.note}</div>
-      </div>
-    `;
+
+    const icon = document.createElement("span");
+    icon.className = "resource-icon";
+    icon.textContent = res.youtubeId ? "▶️" : (res.image ? "🖼️" : "📎");
+    item.appendChild(icon);
+
+    const body = document.createElement("div");
+    body.className = "resource-body";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "resource-name";
+    if(res.url){
+      const a = document.createElement("a");
+      a.href = res.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = res.name;
+      nameEl.appendChild(a);
+    } else {
+      nameEl.textContent = res.name;
+    }
+    body.appendChild(nameEl);
+
+    const noteEl = document.createElement("div");
+    noteEl.className = "resource-note";
+    noteEl.textContent = res.note;
+    body.appendChild(noteEl);
+
+    if(res.image){
+      const img = document.createElement("img");
+      img.className = "resource-image";
+      img.src = res.image;
+      img.alt = res.name;
+      img.loading = "lazy";
+      body.appendChild(img);
+    }
+
+    if(res.youtubeId){
+      body.appendChild(renderYoutubeEmbed(res.youtubeId, res.name));
+    }
+
+    item.appendChild(body);
     list.appendChild(item);
   });
 
   div.appendChild(list);
+
+  if(course.media && course.media.length){
+    const mediaHeading = document.createElement("div");
+    mediaHeading.className = "section-subheading";
+    mediaHeading.textContent = "מדיה נוספת";
+    div.appendChild(mediaHeading);
+
+    const mediaGrid = document.createElement("div");
+    mediaGrid.className = "media-grid";
+    course.media.forEach(m => {
+      const card = document.createElement("div");
+      card.className = "media-card";
+      if(m.caption){
+        const cap = document.createElement("div");
+        cap.className = "media-caption";
+        cap.textContent = m.caption;
+        card.appendChild(cap);
+      }
+      if(m.type === "youtube"){
+        card.appendChild(renderYoutubeEmbed(m.id_or_url, m.caption || course.title));
+      } else if(m.type === "image"){
+        const img = document.createElement("img");
+        img.className = "resource-image";
+        img.src = m.id_or_url;
+        img.alt = m.caption || course.title;
+        img.loading = "lazy";
+        card.appendChild(img);
+      }
+      mediaGrid.appendChild(card);
+    });
+    div.appendChild(mediaGrid);
+  }
+
   return div;
+}
+
+function renderYoutubeEmbed(youtubeId, label){
+  const wrap = document.createElement("div");
+  wrap.className = "video-embed";
+
+  const thumb = document.createElement("button");
+  thumb.type = "button";
+  thumb.className = "video-thumb";
+  thumb.setAttribute("aria-label", `הפעל סרטון: ${label}`);
+  thumb.style.backgroundImage = `url(https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg)`;
+
+  const playIcon = document.createElement("span");
+  playIcon.className = "video-play-icon";
+  playIcon.textContent = "▶";
+  thumb.appendChild(playIcon);
+
+  thumb.onclick = () => {
+    const iframe = document.createElement("iframe");
+    iframe.className = "video-iframe";
+    iframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1`;
+    iframe.title = label;
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+    iframe.allowFullscreen = true;
+    wrap.replaceChildren(iframe);
+  };
+
+  wrap.appendChild(thumb);
+  return wrap;
 }
 
 // ---------- Flashcards ----------

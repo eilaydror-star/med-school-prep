@@ -44,10 +44,14 @@ html, body{
   font-family: 'Heebo', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.6;
+  /* avoid iOS Safari's tap-to-zoom on double tap for the whole app */
+  touch-action: manipulation;
 }
 
 body{
   min-height: 100vh;
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 ::selection{ background: var(--accent-soft); color: var(--text); }
@@ -77,9 +81,11 @@ button{ font-family: inherit; }
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: -webkit-fill-available;
   position: sticky;
   top: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   z-index: 20;
 }
 
@@ -122,6 +128,7 @@ button{ font-family: inherit; }
   flex-direction: column;
   gap: 3px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .nav-section-label{
@@ -148,11 +155,10 @@ button{ font-family: inherit; }
   text-align: right;
   font-size: 14px;
   transition: background 0.15s ease, color 0.15s ease;
-}
-
-.nav-item:hover{
-  background: var(--panel-hover);
-  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .nav-item.active{
@@ -255,33 +261,34 @@ button{ font-family: inherit; }
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-dim);
-  padding: 9px 12px;
+  padding: 11px 12px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.btn-ghost:hover{
-  border-color: var(--rose);
-  color: var(--rose);
-  background: var(--rose-soft);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .sidebar-toggle{
   display: none;
   position: fixed;
-  top: 14px;
-  right: 14px;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: max(14px, env(safe-area-inset-right, 0px));
   z-index: 30;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   background: var(--panel);
   border: 1px solid var(--border);
   color: var(--text);
   font-size: 18px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* ---------- Content ---------- */
@@ -396,12 +403,10 @@ button{ font-family: inherit; }
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.course-card:hover{
-  border-color: var(--accent-dim);
-  background: var(--panel-hover);
-  transform: translateY(-2px);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .course-card-top{
@@ -484,8 +489,13 @@ button{ font-family: inherit; }
   margin-bottom: 14px;
   cursor: pointer;
   width: fit-content;
+  min-height: 44px;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
-.breadcrumb:hover{ color: var(--accent); }
 
 .course-header{
   display: flex;
@@ -534,21 +544,25 @@ button{ font-family: inherit; }
   border-bottom: 1px solid var(--border-soft);
   margin-bottom: 22px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-btn{
   background: transparent;
   border: none;
   color: var(--text-faint);
-  padding: 10px 16px;
+  padding: 12px 16px;
+  min-height: 44px;
   font-size: 14px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
   white-space: nowrap;
   transition: color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
-
-.tab-btn:hover{ color: var(--text); }
 
 .tab-btn.active{
   color: var(--accent);
@@ -578,14 +592,17 @@ button{ font-family: inherit; }
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
+  min-height: 44px;
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
-
-.topic-item:hover{ border-color: var(--accent-dim); }
 
 .topic-checkbox{
   width: 20px;
@@ -617,6 +634,106 @@ button{ font-family: inherit; }
   font-size: 14px;
   color: var(--text);
   line-height: 1.5;
+  flex: 1;
+}
+
+.topic-arrow{
+  color: var(--text-faint);
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ---------- Topic content page ---------- */
+
+.topic-page{ max-width: 760px; }
+
+.topic-page-header{ margin-bottom: 18px; }
+
+.topic-page-counter{
+  font-size: 12.5px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.topic-page-title{
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.topic-content{
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--text-dim);
+}
+
+.topic-content p{ margin: 0 0 14px; }
+.topic-content ul, .topic-content ol{ margin: 0 0 14px; padding-inline-start: 22px; }
+.topic-content li{ margin-bottom: 6px; }
+.topic-content strong{ color: var(--text); }
+.topic-content h3{
+  font-size: 16px;
+  color: var(--text);
+  margin: 18px 0 8px;
+}
+
+.topic-read-row{
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.btn-mark-read{
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  padding: 12px 20px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-mark-read.done{
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.topic-nav-row{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btn-topic-nav{
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 11px 16px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-topic-nav:disabled{
+  opacity: 0.35;
+  cursor: default;
 }
 
 .resource-list{
@@ -655,6 +772,91 @@ button{ font-family: inherit; }
   margin-top: 3px;
 }
 
+.resource-body{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.resource-image{
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border);
+}
+
+.section-subheading{
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 22px 0 10px;
+}
+
+.media-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  max-width: 900px;
+}
+
+.media-card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+}
+
+.media-caption{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.video-embed{
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+  background: #000;
+}
+
+.video-thumb{
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-play-icon{
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-iframe{
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 /* ---------- Flashcards ---------- */
 
 .flash-toolbar{
@@ -681,6 +883,8 @@ button{ font-family: inherit; }
   transform-style: preserve-3d;
   transition: transform 0.5s cubic-bezier(0.4,0.2,0.2,1);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .flashcard.flipped{ transform: rotateY(180deg); }
@@ -740,7 +944,8 @@ button{ font-family: inherit; }
 }
 
 .btn{
-  padding: 10px 18px;
+  padding: 11px 18px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--panel);
@@ -749,16 +954,17 @@ button{ font-family: inherit; }
   cursor: pointer;
   transition: all 0.15s ease;
   font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
-
-.btn:hover{ border-color: var(--accent-dim); background: var(--panel-hover); }
 
 .btn.primary{
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-contrast);
 }
-.btn.primary:hover{ background: var(--accent-dim); border-color: var(--accent-dim); }
 
 .btn.success{
   background: var(--green-soft);
@@ -815,6 +1021,7 @@ button{ font-family: inherit; }
 
 .quiz-option{
   padding: 12px 16px;
+  min-height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--bg-elevated);
@@ -823,10 +1030,10 @@ button{ font-family: inherit; }
   text-align: right;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.quiz-option:hover:not(:disabled){
-  border-color: var(--accent-dim);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .quiz-option.selected{
@@ -891,6 +1098,39 @@ button{ font-family: inherit; }
   color: var(--text-faint);
   font-size: 14px;
   padding: 30px 0;
+}
+
+/* ---------- Hover states (mouse/trackpad only) ----------
+   Gated behind (hover: hover) so tapping on iPad/touch devices never
+   leaves a "stuck" hover style applied after the finger lifts. */
+@media (hover: hover) and (pointer: fine){
+  .nav-item:hover{
+    background: var(--panel-hover);
+    color: var(--text);
+  }
+  .btn-ghost:hover{
+    border-color: var(--rose);
+    color: var(--rose);
+    background: var(--rose-soft);
+  }
+  .course-card:hover{
+    border-color: var(--accent-dim);
+    background: var(--panel-hover);
+    transform: translateY(-2px);
+  }
+  .breadcrumb:hover{ color: var(--accent); }
+  .tab-btn:hover{ color: var(--text); }
+  .topic-item:hover{ border-color: var(--accent-dim); }
+  .btn-mark-read:hover{ background: var(--accent); color: var(--accent-contrast); }
+  .btn-topic-nav:hover:not(:disabled){
+    border-color: var(--accent-dim);
+    color: var(--accent);
+  }
+  .btn:hover{ border-color: var(--accent-dim); background: var(--panel-hover); }
+  .btn.primary:hover{ background: var(--accent-dim); border-color: var(--accent-dim); }
+  .quiz-option:hover:not(:disabled){
+    border-color: var(--accent-dim);
+  }
 }
 
 /* ---------- Responsive ---------- */
