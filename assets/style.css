@@ -200,6 +200,56 @@ button{ font-family: inherit; }
   border-top: 1px solid var(--border-soft);
 }
 
+.auth-box{
+  margin-bottom: 10px;
+}
+
+.auth-user{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.auth-avatar{
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.auth-avatar-fallback{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border-soft);
+  font-size: 14px;
+}
+
+.auth-name{
+  font-size: 13px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-btn{
+  margin-bottom: 8px;
+}
+
+.auth-google-btn{
+  font-weight: 600;
+}
+
+.auth-note{
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
 .btn-ghost{
   width: 100%;
   background: transparent;

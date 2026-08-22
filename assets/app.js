@@ -3,9 +3,12 @@
 // ===================================================================
 
 const STORAGE_KEY = "medprep-state-v1";
+const TS_KEY = STORAGE_KEY + "-ts";
 
 let state = loadState();
 let currentView = { name: "dashboard" };
+let currentUser = null;
+let cloudSaveTimer = null;
 
 function loadState(){
   try{
@@ -15,8 +18,27 @@ function loadState(){
   return { courses: {} };
 }
 
+function getLocalTs(){
+  return Number(localStorage.getItem(TS_KEY) || 0);
+}
+
+function setLocalTs(ts){
+  localStorage.setItem(TS_KEY, String(ts));
+}
+
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const ts = Date.now();
+  setLocalTs(ts);
+  queueCloudSave(ts);
+}
+
+function queueCloudSave(ts){
+  if(!currentUser || !window.MedPrepSync) return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = setTimeout(() => {
+    window.MedPrepSync.saveRemote(currentUser.uid, state, ts).catch(e => console.error("cloud save failed", e));
+  }, 800);
 }
 
 function getCourseState(courseId){
@@ -594,10 +616,78 @@ function renderQuizTab(course){
 
 function resetProgress(){
   if(confirm("האם למחוק את כל ההתקדמות השמורה? פעולה זו אינה הפיכה.")){
-    localStorage.removeItem(STORAGE_KEY);
     state = { courses: {} };
     navigate({ name: "dashboard" });
+    saveState();
   }
+}
+
+// ---------- Auth / cloud sync ----------
+
+function renderAuthUI(){
+  const box = document.getElementById("auth-box");
+  if(!box) return;
+  box.innerHTML = "";
+
+  if(currentUser){
+    const info = document.createElement("div");
+    info.className = "auth-user";
+    info.innerHTML = `
+      ${currentUser.photoURL ? `<img class="auth-avatar" src="${currentUser.photoURL}" alt="">` : `<span class="auth-avatar auth-avatar-fallback">👤</span>`}
+      <span class="auth-name">${currentUser.displayName || currentUser.email || "משתמש"}</span>
+    `;
+    box.appendChild(info);
+
+    const btn = document.createElement("button");
+    btn.className = "btn-ghost auth-btn";
+    btn.textContent = "התנתקות";
+    btn.onclick = () => window.MedPrepSync && window.MedPrepSync.signOutUser();
+    box.appendChild(btn);
+  }else{
+    const btn = document.createElement("button");
+    btn.className = "btn-ghost auth-btn auth-google-btn";
+    btn.textContent = "התחברות עם Google";
+    btn.onclick = () => window.MedPrepSync && window.MedPrepSync.signIn();
+    box.appendChild(btn);
+
+    const note = document.createElement("div");
+    note.className = "auth-note";
+    note.textContent = "התחברו כדי לסנכרן התקדמות בין מכשירים";
+    box.appendChild(note);
+  }
+}
+
+function setupAuthSync(){
+  function attach(){
+    if(!window.MedPrepSync) return;
+    window.MedPrepSync.onAuthChange(async (user) => {
+      currentUser = user;
+      renderAuthUI();
+
+      if(!user) return;
+
+      try{
+        const remote = await window.MedPrepSync.loadRemote(user.uid);
+        const localTs = getLocalTs();
+        const remoteTs = remote && remote.updatedAt ? remote.updatedAt : 0;
+
+        if(remote && remoteTs > localTs){
+          state = remote.state || { courses: {} };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          setLocalTs(remoteTs);
+        }else{
+          queueCloudSave(localTs || Date.now());
+        }
+      }catch(e){
+        console.error("cloud sync failed", e);
+      }
+
+      navigate(currentView);
+    });
+  }
+
+  if(window.MedPrepSync) attach();
+  else window.addEventListener("medprep-sync-ready", attach, { once: true });
 }
 
 // ---------- Init ----------
@@ -610,7 +700,9 @@ function init(){
     document.getElementById("sidebar").classList.toggle("open");
   };
 
+  renderAuthUI();
   navigate({ name: "dashboard" });
+  setupAuthSync();
 }
 
 document.addEventListener("DOMContentLoaded", init);
