@@ -256,6 +256,16 @@ button{ font-family: inherit; }
   margin-bottom: 8px;
 }
 
+.legal-note{
+  font-size: 10px;
+  color: var(--text-faint);
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 8px;
+  padding: 0 8px;
+  opacity: 0.8;
+}
+
 .btn-ghost{
   width: 100%;
   background: transparent;
