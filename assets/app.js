@@ -1,5 +1,5 @@
 // ===================================================================
-// APP: מוכנים לשנה א' - רפואה בר אילן
+// APP: מוכנים לשנה א' - רפואה
 // ===================================================================
 
 const STORAGE_KEY = "medprep-state-v1";
@@ -21,7 +21,7 @@ function saveState(){
 
 function getCourseState(courseId){
   if(!state.courses[courseId]){
-    state.courses[courseId] = { topics: {}, flashKnown: {}, quizScore: null };
+    state.courses[courseId] = { topics: {}, flashKnown: {}, quizScore: null, quizProgress: null };
   }
   return state.courses[courseId];
 }
@@ -92,7 +92,10 @@ function renderSidebar(){
   const dashItem = document.createElement("button");
   dashItem.className = "nav-item" + (currentView.name === "dashboard" ? " active" : "");
   dashItem.innerHTML = `<span class="nav-icon">🏠</span><span class="nav-label">דשבורד</span>`;
-  dashItem.onclick = () => navigate({ name: "dashboard" });
+  dashItem.onclick = () => {
+    navigate({ name: "dashboard" });
+    closeSidebarMobile();
+  };
   nav.appendChild(dashItem);
 
   const label = document.createElement("div");
@@ -158,7 +161,7 @@ function renderDashboard(){
   header.className = "page-header";
   header.innerHTML = `
     <h1 class="page-title">ברוכים הבאים 👋</h1>
-    <p class="page-sub">מסלול הכנה לשנה א' ברפואה - בר אילן. עקבו אחרי ההתקדמות שלכם בכל קורס.</p>
+    <p class="page-sub">מסלול הכנה לשנה א' ברפואה. עקבו אחרי ההתקדמות שלכם בכל קורס.</p>
   `;
   wrap.appendChild(header);
 
@@ -469,11 +472,17 @@ function renderQuizTab(course){
   }
 
   const cs = getCourseState(course.id);
-  let idx = 0;
-  let selected = null;
-  let answered = false;
-  let correctCount = 0;
+  const saved = cs.quizProgress;
+  let idx = saved ? saved.idx : 0;
+  let selected = saved ? saved.selected : null;
+  let answered = saved ? saved.answered : false;
+  let correctCount = saved ? saved.correctCount : 0;
   let finished = false;
+
+  function saveQuizProgress(){
+    cs.quizProgress = { idx, selected, answered, correctCount };
+    saveState();
+  }
 
   function renderQuiz(){
     div.innerHTML = "";
@@ -492,6 +501,7 @@ function renderQuizTab(course){
       retryBtn.textContent = "נסו שוב";
       retryBtn.onclick = () => {
         idx = 0; selected = null; answered = false; correctCount = 0; finished = false;
+        saveQuizProgress();
         renderQuiz();
       };
       result.appendChild(retryBtn);
@@ -533,6 +543,7 @@ function renderQuizTab(course){
         selected = optIdx;
         answered = true;
         if(optIdx === q.correct) correctCount++;
+        saveQuizProgress();
         renderQuiz();
       };
       options.appendChild(btn);
@@ -560,12 +571,14 @@ function renderQuizTab(course){
       if(idx === course.quiz.length - 1){
         finished = true;
         cs.quizScore = { correct: correctCount, total: course.quiz.length };
+        cs.quizProgress = null;
         saveState();
         renderSidebar();
       }else{
         idx++;
         selected = null;
         answered = false;
+        saveQuizProgress();
       }
       renderQuiz();
     };

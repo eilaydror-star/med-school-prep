@@ -1,6 +1,6 @@
 # med-school-prep
 
-Study prep app for first-year medicine at Bar-Ilan University (6-year program) — course checklists, flashcards, and quizzes.
+Study prep app for first-year medicine (6-year program) — course checklists, flashcards, and quizzes.
 
 ## Run locally
 
