@@ -384,13 +384,22 @@ function renderTopicsTab(course){
     const checked = !!cs.topics[idx];
     const item = document.createElement("div");
     item.className = "topic-item" + (checked ? " checked" : "");
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
     item.innerHTML = `
       <span class="topic-checkbox">${checked ? "✓" : ""}</span>
       <span class="topic-label">${topic.title}</span>
       <span class="topic-arrow">←</span>
     `;
-    item.onclick = () => {
+    const openTopic = () => {
       navigate({ name: "topic", courseId: course.id, topicIdx: idx });
+    };
+    item.onclick = openTopic;
+    item.onkeydown = (e) => {
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        openTopic();
+      }
     };
     list.appendChild(item);
   });
@@ -614,6 +623,8 @@ function renderFlashcardsTab(course){
     stage.innerHTML = "";
     const cardEl = document.createElement("div");
     cardEl.className = "flashcard" + (flipped ? " flipped" : "");
+    cardEl.setAttribute("role", "button");
+    cardEl.setAttribute("tabindex", "0");
     cardEl.innerHTML = `
       <div class="flash-face front">
         <div class="flash-face-label">שאלה</div>
@@ -629,6 +640,13 @@ function renderFlashcardsTab(course){
     cardEl.onclick = () => {
       flipped = !flipped;
       renderCard();
+    };
+    cardEl.onkeydown = (e) => {
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        flipped = !flipped;
+        renderCard();
+      }
     };
     stage.appendChild(cardEl);
 
