@@ -462,6 +462,25 @@ button{ font-family: inherit; }
 .priority-badge.medium{ background: var(--amber-soft); color: var(--amber); }
 .priority-badge.low{ background: var(--border); color: var(--text-faint); }
 
+.course-card-badges{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.finished-badge{
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  height: fit-content;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
 .progress-bar-track{
   height: 7px;
   background: var(--border-soft);
@@ -518,6 +537,13 @@ button{ font-family: inherit; }
   width: 58px;
   height: 58px;
   font-size: 30px;
+}
+
+.course-header-title-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .course-header-title{

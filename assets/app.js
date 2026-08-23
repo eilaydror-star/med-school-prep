@@ -64,14 +64,36 @@ function courseProgress(course){
   const knownCards = Object.values(cs.flashKnown).filter(Boolean).length;
   const cardsPct = totalCards ? knownCards / totalCards : 0;
 
-  const quizPct = cs.quizScore ? cs.quizScore.correct / cs.quizScore.total : 0;
   const quizDone = cs.quizScore ? 1 : 0;
 
   const parts = [topicsPct, cardsPct];
-  if(course.quiz.length) parts.push(quizDone ? Math.max(quizPct, 0.5) : 0);
+  if(course.quiz.length) parts.push(quizDone);
 
   const avg = parts.reduce((a,b) => a+b, 0) / parts.length;
   return Math.round(avg * 100);
+}
+
+// A course is "finished" once all three legs are genuinely complete: every topic
+// read, every flashcard marked known, and the quiz attempted (any score — not
+// necessarily perfect). Empty topics/flashcards/quiz arrays are vacuously satisfied
+// here, unlike courseProgress's percentage math (which treats an empty total as 0
+// rather than 1); this only diverges from Math.round(courseProgress(...)) === 100
+// if a course ever ships with zero topics or zero flashcards, which doesn't happen
+// with current content.
+function isCourseFinished(course){
+  const cs = getCourseState(course.id);
+
+  const totalTopics = course.topics.length;
+  const doneTopics = Object.values(cs.topics).filter(Boolean).length;
+  const topicsDone = totalTopics ? doneTopics === totalTopics : true;
+
+  const totalCards = course.flashcards.length;
+  const knownCards = Object.values(cs.flashKnown).filter(Boolean).length;
+  const cardsDone = totalCards ? knownCards === totalCards : true;
+
+  const quizDone = course.quiz.length ? cs.quizScore != null : true;
+
+  return topicsDone && cardsDone && quizDone;
 }
 
 function overallStats(){
@@ -81,7 +103,7 @@ function overallStats(){
   COURSES.forEach(c => {
     const p = courseProgress(c);
     sum += p;
-    if(p >= 100) completed++;
+    if(isCourseFinished(c)) completed++;
   });
   return {
     avgPct: total ? Math.round(sum / total) : 0,
@@ -256,14 +278,17 @@ function renderCourseCard(course){
   card.innerHTML = `
     <div class="course-card-top">
       <div class="course-icon">${course.icon}</div>
-      <div class="priority-badge ${course.priority}">${priorityLabel(course.priority)}</div>
+      <div class="course-card-badges">
+        ${isCourseFinished(course) ? `<div class="finished-badge">✓ הושלם</div>` : ""}
+        <div class="priority-badge ${course.priority}">${priorityLabel(course.priority)}</div>
+      </div>
     </div>
     <div>
       <div class="course-title">${course.title}</div>
       <div class="course-short">${course.short}</div>
     </div>
     <div class="progress-bar-track">
-      <div class="progress-bar-fill ${pct >= 100 ? 'complete' : ''}" style="width:${pct}%"></div>
+      <div class="progress-bar-fill ${isCourseFinished(course) ? 'complete' : ''}" style="width:${pct}%"></div>
     </div>
     <div class="course-card-footer">
       <span>${pct}% הושלם</span>
@@ -290,7 +315,10 @@ function renderCoursePage(course, activeTab){
   header.innerHTML = `
     <div class="course-icon">${course.icon}</div>
     <div>
-      <h1 class="course-header-title">${course.title}</h1>
+      <div class="course-header-title-row">
+        <h1 class="course-header-title">${course.title}</h1>
+        ${isCourseFinished(course) ? `<div class="finished-badge">✓ הושלם</div>` : ""}
+      </div>
       <p class="course-header-short">${course.short}</p>
     </div>
   `;
@@ -300,7 +328,7 @@ function renderCoursePage(course, activeTab){
   progressLine.className = "course-progress-line";
   progressLine.innerHTML = `
     <div class="progress-bar-track">
-      <div class="progress-bar-fill ${pct >= 100 ? 'complete' : ''}" style="width:${pct}%"></div>
+      <div class="progress-bar-fill ${isCourseFinished(course) ? 'complete' : ''}" style="width:${pct}%"></div>
     </div>
     <div class="progress-pct">${pct}%</div>
   `;
