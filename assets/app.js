@@ -100,9 +100,11 @@ function daysUntil(dateStr){
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
+const HEBREW_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+
 function formatDateHe(dateStr){
   const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("he-IL", { year: "numeric", month: "long", day: "numeric" });
+  return `${d.getDate()} ב${HEBREW_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 // ---------- Rendering: sidebar ----------
